@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盲打练习</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --body-bg: #f3f4f6;
+            /* gray-100 */
+            --body-text: #1f2937;
+            /* gray-800 */
+            --title-text: #2563eb;
+            /* blue-600 */
+            --keyboard-bg: #cbd5e1;
+            /* slate-300 */
+            --key-bg: #f8fafc;
+            /* slate-50 */
+            --key-border: #94a3b8;
+            /* slate-400 */
+            --key-text: #334155;
+            /* slate-700 */
+            --key-active-bg: #fbbf24;
+            /* amber-400 */
+            --key-active-text: #1f2937;
+            /* gray-800 */
+            --key-active-shadow: #fbbf24;
+            --key-correct-bg: #34d399;
+            /* green-400 */
+            --key-correct-text: white;
+            --key-incorrect-bg: #f87171;
+            /* red-400 */
+            --key-incorrect-text: white;
+            --practice-area-bg: white;
+            --practice-area-text: #1f2937;
+            /* gray-800 */
+            --target-display-bg: #e0e7ff;
+            /* indigo-100 */
+            --target-display-text-base: #4338ca;
+            /* indigo-700 */
+            --target-char-correct: #16a34a;
+            /* green-600 */
+            --target-char-incorrect: #dc2626;
+            /* red-600 */
+            --target-char-current: #4f46e5;
+            /* indigo-600 */
+            --target-char-pending: #78716c;
+            /* stone-500 */
+            --stats-bg: #f1f5f9;
+            /* slate-100 */
+            --stats-text: #1f2937;
+            /* gray-800 */
+            --button-bg: #3b82f6;
+            /* blue-500 */
+            --button-hover-bg: #2563eb;
+            /* blue-600 */
+            --button-disabled-bg: #9ca3af;
+            /* gray-400 */
+            --button-text: white;
+            --custom-practice-setup-bg: #f9fafb;
+            /* gray-50 */
+            --custom-practice-setup-border: #e5e7eb;
+            /* gray-200 */
+            --custom-practice-setup-text: #374151;
+            /* gray-700 */
+            --custom-practice-input-bg: white;
+            --custom-practice-input-border: #d1d5db;
+            /* gray-300 */
+            --custom-practice-input-text: #1f2937;
+            --theme-button-bg: #e5e7eb;
+            /* gray-200 */
+            --theme-button-text: #1f2937;
+            /* gray-800 */
+            --modal-bg: white;
+            --modal-text: #1f2937;
+            --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+        }
+
+        .dark-mode {
+            --body-bg: #111827;
+            /* gray-900 */
+            --body-text: #f3f4f6;
+            /* gray-100 */
+            --title-text: #60a5fa;
+            /* blue-400 */
+            --keyboard-bg: #374151;
+            /* gray-700 */
+            --key-bg: #4b5563;
+            /* gray-600 */
+            --key-border: #6b7280;
+            /* gray-500 */
+            --key-text: #f3f4f6;
+            /* gray-100 */
+            --key-active-bg: #f59e0b;
+            /* amber-500 */
+            --key-active-text: #111827;
+            /* gray-900 */
+            --key-active-shadow: #f59e0b;
+            --key-correct-bg: #10b981;
+            /* green-500 */
+            --key-incorrect-bg: #ef4444;
+            /* red-500 */
+            --practice-area-bg: #1f2937;
+            /* gray-800 */
+            --practice-area-text: #f3f4f6;
+            /* gray-100 */
+            --target-display-bg: #312e81;
+            /* indigo-900 */
+            --target-display-text-base: #c7d2fe;
+            /* indigo-200 */
+            --target-char-correct: #6ee7b7;
+            /* green-300 */
+            --target-char-incorrect: #fca5a5;
+            /* red-300 */
+            --target-char-current: #a5b4fc;
+            /* indigo-300 */
+            --target-char-pending: #a8a29e;
+            /* stone-400 */
+            --stats-bg: #374151;
+            /* gray-700 */
+            --stats-text: #f3f4f6;
+            /* gray-100 */
+            --button-bg: #60a5fa;
+            /* blue-400 */
+            --button-hover-bg: #3b82f6;
+            /* blue-500 */
+            --button-disabled-bg: #4b5563;
+            /* gray-600 */
+            --custom-practice-setup-bg: #1f2937;
+            /* gray-800 */
+            --custom-practice-setup-border: #4b5563;
+            /* gray-600 */
+            --custom-practice-setup-text: #d1d5db;
+            /* gray-300 */
+            --custom-practice-input-bg: #374151;
+            /* gray-700 */
+            --custom-practice-input-border: #6b7280;
+            /* gray-500 */
+            --custom-practice-input-text: #f3f4f6;
+            --theme-button-bg: #4b5563;
+            /* gray-600 */
+            --theme-button-text: #f3f4f6;
+            /* gray-100 */
+            --modal-bg: #1f2937;
+            /* gray-800 */
+            --modal-text: #f3f4f6;
+            /* gray-100 */
+            --modal-overlay-bg: rgba(0, 0, 0, 0.7);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--body-bg);
+            color: var(--body-text);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            /* Space between title and QR code */
+            margin-bottom: 1.5rem;
+            /* Tailwind mb-6 */
+            margin-top: 1rem;
+            /* Add some space at the top */
+            flex-wrap: wrap;
+            /* Allow wrapping on small screens */
+        }
+
+        .main-title {
+            font-size: 2.25rem;
+            /* Tailwind text-4xl */
+            font-weight: 700;
+            /* Tailwind font-bold */
+            color: var(--title-text);
+            text-align: center;
+        }
+
+        .qr-code-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            object-fit: contain;
+            /* Ensures the image scales nicely within the bounds */
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-rows: repeat(6, auto);
+            grid-template-columns: repeat(15, minmax(0, 1fr));
+            gap: 5px;
+            background-color: var(--keyboard-bg);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 950px;
+        }
+
+        .key {
+            background-color: var(--key-bg);
+            border: 1px solid var(--key-border);
+            color: var(--key-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            height: 45px;
+            border-radius: 6px;
+            transition: all 0.1s ease-in-out;
+            user-select: none;
+            text-transform: capitalize;
+            box-sizing: border-box;
+        }
+
+        .key.placeholder {
+            visibility: hidden;
+        }
+
+
+        .key.active {
+            background-color: var(--key-active-bg);
+            color: var(--key-active-text);
+            transform: scale(0.95);
+            box-shadow: 0 0 10px var(--key-active-shadow);
+        }
+
+        .key.correct {
+            background-color: var(--key-correct-bg);
+            color: var(--key-correct-text);
+        }
+
+        .key.incorrect {
+            background-color: var(--key-incorrect-bg);
+            color: var(--key-incorrect-text);
+        }
+
+        .practice-area {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--practice-area-bg);
+            color: var(--practice-area-text);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 950px;
+        }
+
+        .target-text-display {
+            font-size: 1.8rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: var(--target-display-bg);
+            color: var(--target-display-text-base);
+            border-radius: 6px;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 1px;
+            flex-wrap: wrap;
+        }
+
+        .target-text-display span {
+            transition: color 0.1s, text-decoration-color 0.1s;
+            padding: 0 0.05em;
+        }
+
+        .char-typed-correct {
+            color: var(--target-char-correct) !important;
+        }
+
+        .char-typed-incorrect {
+            color: var(--target-char-incorrect) !important;
+            text-decoration: line-through;
+            text-decoration-color: var(--target-char-incorrect);
+        }
+
+        .char-current {
+            color: var(--target-char-current) !important;
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+        }
+
+        .char-pending {
+            color: var(--target-char-pending) !important;
+        }
+
+
+        .stats {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            font-size: 1rem;
+        }
+
+        .stats div {
+            padding: 10px 15px;
+            background-color: var(--stats-bg);
+            color: var(--stats-text);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .app-button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 5px;
+            transition: background-color 0.2s ease;
+        }
+
+        .app-button:hover {
+            background-color: var(--button-hover-bg);
+        }
+
+        .app-button:disabled {
+            background-color: var(--button-disabled-bg);
+            cursor: not-allowed;
+        }
+
+        #addCustomPracticeBtn {
+            background-color: var(--key-correct-bg);
+        }
+
+        #addCustomPracticeBtn:hover {
+            background-color: #15803d;
+        }
+
+        .dark-mode #addCustomPracticeBtn:hover {
+            background-color: #16a34a;
+        }
+
+
+        .custom-practice-setup {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--custom-practice-setup-bg);
+            color: var(--custom-practice-setup-text);
+            border-radius: 8px;
+            border: 1px solid var(--custom-practice-setup-border);
+            width: 100%;
+            max-width: 950px;
+        }
+
+        .custom-practice-setup h3 {
+            color: var(--custom-practice-setup-text);
+        }
+
+        .custom-practice-setup input[type="text"],
+        .custom-practice-setup input[type="file"] {
+            padding: 8px 12px;
+            border: 1px solid var(--custom-practice-input-border);
+            background-color: var(--custom-practice-input-bg);
+            color: var(--custom-practice-input-text);
+            border-radius: 6px;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .custom-practice-setup input[type="text"] {
+            width: calc(100% - 200px);
+        }
+
+        .custom-practice-setup .controls-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+
+        #themeSwitcherContainer {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+
+        #themeToggleBtn {
+            background-color: var(--theme-button-bg);
+            color: var(--theme-button-text);
+            border-radius: 9999px;
+            padding: 0.5rem;
+        }
+
+        #themeToggleBtn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--button-hover-bg);
+        }
+
+
+        #customAlertModal {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-overlay-bg);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #customAlertModal>div {
+            background-color: var(--modal-bg);
+            color: var(--modal-text);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 300px;
+            max-width: 80%;
+        }
+
+        #customAlertMessage {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 960px) {
+            .keyboard {
+                max-width: 100%;
+                gap: 3px;
+                padding: 5px;
+            }
+
+            .key {
+                height: 40px;
+                font-size: 0.8rem;
+            }
+
+            .target-text-display {
+                font-size: 1.5rem;
+            }
+
+            .stats div {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+
+            .app-button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+            .custom-practice-setup input[type="text"] {
+                width: calc(100% - 180px);
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .title-container {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .main-title {
+                font-size: 1.5rem;
+            }
+
+            .qr-code-img {
+                width: 60px;
+                height: 60px;
+            }
+
+            .key {
+                height: 35px;
+                font-size: 0.65rem;
+            }
+
+            .keyboard {
+                grid-template-columns: repeat(auto-fit, minmax(18px, 1fr));
+                gap: 2px;
+            }
+
+            .target-text-display {
+                font-size: 1.2rem;
+                min-height: 50px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            }
+
+            .custom-practice-setup .controls-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .custom-practice-setup input[type="text"] {
+                width: 100%;
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+
+            #addCustomPracticeBtn {
+                width: 100%;
+            }
+
+            #loadDefaultTextBtnContainer {
+                margin-top: 10px;
+                width: 100%;
+            }
+
+            #loadDefaultTextBtn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="title-container">
+        <h1 class="main-title">蓝银草APM盲打练习</h1>
+        <img src="微信图片_20250403123005.jpg" alt="QR Code" class="qr-code-img"
+            onerror="this.onerror=null; this.src='https://placehold.co/80x80/EFEFEF/AAAAAA&text=QR+Error';">
+    </div>
+
+    <div id="themeSwitcherContainer">
+        <button id="themeToggleBtn" title="Toggle theme" class="focus:outline-none focus:ring-2 focus:ring-offset-2">
+            <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" style="display: none;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 3v1m0 16v1m8.66-15.66l-.707.707M4.04 19.96l-.707.707M21 12h-1M4 12H3m15.66 8.66l-.707-.707M4.04 4.04l-.707-.707" />
+            </svg>
+            <svg id="themeIconMoon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" style="display: none;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="keyboard" id="keyboard"></div>
+
+    <div class="practice-area">
+        <div class="target-text-display" id="targetTextDisplay">
+            按 "开始练习" 按钮开始
+        </div>
+
+        <div class="stats">
+            <div id="wpm">WPM: 0</div>
+            <div id="accuracy">准确率: 0%</div>
+            <div id="score">得分: 0</div>
+            <div id="timer">时间: 0s</div>
+            <div id="apm">APM: 0</div>
+        </div>
+
+        <div class="controls text-center mt-4">
+            <button id="startPracticeBtn" class="app-button">开始练习</button>
+            <button id="resetPracticeBtn" class="app-button" disabled>重置练习</button>
+        </div>
+    </div>
+
+    <div class="custom-practice-setup mt-5 p-4 shadow">
+        <h3 class="text-lg font-semibold mb-3">自定义练习文件</h3>
+        <div class="controls-wrapper">
+            <input type="file" id="customFilePracticeInput"
+                class="flex-grow focus:ring-indigo-500 focus:border-indigo-500" style="display: none;">
+            <input type="text" id="customPracticeNameInput" placeholder="输入练习文本名称或粘贴文本"
+                class="flex-grow focus:ring-indigo-500 focus:border-indigo-500">
+            <button id="addCustomPracticeBtn" class="app-button text-white px-4 py-2 rounded-r-md">添加本地练习文件</button>
+        </div>
+        <div id="loadDefaultTextBtnContainer" class="text-center mt-3">
+            <button id="loadDefaultTextBtn" class="app-button">加载默认练习文本</button>
+        </div>
+    </div>
+
+    <div id="customAlertModal">
+        <div>
+            <p id="customAlertMessage"></p>
+            <button id="customAlertOkBtn" class="app-button">好的</button>
+        </div>
+    </div>
+
+    <script>
+        // Keyboard layout definition
+        const keyboardLayout = [
+            { key: 'Escape', code: 'Escape', text: 'Esc', span: 1, row: 0 },
+            { key: 'F1', code: 'F1', text: 'F1', span: 1, row: 0 }, { key: 'F2', code: 'F2', text: 'F2', span: 1, row: 0 },
+            { key: 'F3', code: 'F3', text: 'F3', span: 1, row: 0 }, { key: 'F4', code: 'F4', text: 'F4', span: 1, row: 0 },
+            { type: 'spacer', span: 1, row: 0 },
+            { key: 'F5', code: 'F5', text: 'F5', span: 1, row: 0 }, { key: 'F6', code: 'F6', text: 'F6', span: 1, row: 0 },
+            { key: 'F7', code: 'F7', text: 'F7', span: 1, row: 0 }, { key: 'F8', code: 'F8', text: 'F8', span: 1, row: 0 },
+            { type: 'spacer', span: 1, row: 0 },
+            { key: 'F9', code: 'F9', text: 'F9', span: 1, row: 0 }, { key: 'F10', code: 'F10', text: 'F10', span: 1, row: 0 },
+            { key: 'F11', code: 'F11', text: 'F11', span: 1, row: 0 }, { key: 'F12', code: 'F12', text: 'F12', span: 1, row: 0 },
+            { key: 'Backquote', code: 'Backquote', text: '`', shiftText: '~', span: 1, row: 1 },
+            { key: '1', code: 'Digit1', text: '1', shiftText: '!', span: 1, row: 1 }, { key: '2', code: 'Digit2', text: '2', shiftText: '@', span: 1, row: 1 },
+            { key: '3', code: 'Digit3', text: '3', shiftText: '#', span: 1, row: 1 }, { key: '4', code: 'Digit4', text: '4', shiftText: '$', span: 1, row: 1 },
+            { key: '5', code: 'Digit5', text: '5', shiftText: '%', span: 1, row: 1 }, { key: '6', code: 'Digit6', text: '6', shiftText: '^', span: 1, row: 1 },
+            { key: '7', code: 'Digit7', text: '7', shiftText: '&', span: 1, row: 1 }, { key: '8', code: 'Digit8', text: '8', shiftText: '*', span: 1, row: 1 },
+            { key: '9', code: 'Digit9', text: '9', shiftText: '(', span: 1, row: 1 }, { key: '0', code: 'Digit0', text: '0', shiftText: ')', span: 1, row: 1 },
+            { key: 'Minus', code: 'Minus', text: '-', shiftText: '_', span: 1, row: 1 }, { key: 'Equal', code: 'Equal', text: '=', shiftText: '+', span: 1, row: 1 },
+            { key: 'Backspace', code: 'Backspace', text: 'Backspace', span: 2, row: 1 },
+            { key: 'Tab', code: 'Tab', text: 'Tab', span: 2, row: 2 },
+            { key: 'q', code: 'KeyQ', text: 'q', shiftText: 'Q', span: 1, row: 2 }, { key: 'w', code: 'KeyW', text: 'w', shiftText: 'W', span: 1, row: 2 },
+            { key: 'e', code: 'KeyE', text: 'e', shiftText: 'E', span: 1, row: 2 }, { key: 'r', code: 'KeyR', text: 'r', shiftText: 'R', span: 1, row: 2 },
+            { key: 't', code: 'KeyT', text: 't', shiftText: 'T', span: 1, row: 2 }, { key: 'y', code: 'KeyY', text: 'y', shiftText: 'Y', span: 1, row: 2 },
+            { key: 'u', code: 'KeyU', text: 'u', shiftText: 'U', span: 1, row: 2 }, { key: 'i', code: 'KeyI', text: 'i', shiftText: 'I', span: 1, row: 2 },
+            { key: 'o', code: 'KeyO', text: 'o', shiftText: 'O', span: 1, row: 2 }, { key: 'p', code: 'KeyP', text: 'p', shiftText: 'P', span: 1, row: 2 },
+            { key: 'BracketLeft', code: 'BracketLeft', text: '[', shiftText: '{', span: 1, row: 2 },
+            { key: 'BracketRight', code: 'BracketRight', text: ']', shiftText: '}', span: 1, row: 2 },
+            { key: 'Backslash', code: 'Backslash', text: '\\', shiftText: '|', span: 1, row: 2 },
+            { key: 'CapsLock', code: 'CapsLock', text: 'CapsLock', span: 2, row: 3 },
+            { key: 'a', code: 'KeyA', text: 'a', shiftText: 'A', span: 1, row: 3 }, { key: 's', code: 'KeyS', text: 's', shiftText: 'S', span: 1, row: 3 },
+            { key: 'd', code: 'KeyD', text: 'd', shiftText: 'D', span: 1, row: 3 }, { key: 'f', code: 'KeyF', text: 'f', shiftText: 'F', span: 1, row: 3 },
+            { key: 'g', code: 'KeyG', text: 'g', shiftText: 'G', span: 1, row: 3 }, { key: 'h', code: 'KeyH', text: 'h', shiftText: 'H', span: 1, row: 3 },
+            { key: 'j', code: 'KeyJ', text: 'j', shiftText: 'J', span: 1, row: 3 }, { key: 'k', code: 'KeyK', text: 'k', shiftText: 'K', span: 1, row: 3 },
+            { key: 'l', code: 'KeyL', text: 'l', shiftText: 'L', span: 1, row: 3 },
+            { key: 'Semicolon', code: 'Semicolon', text: ';', shiftText: ':', span: 1, row: 3 },
+            { key: 'Quote', code: 'Quote', text: '\'', shiftText: '"', span: 1, row: 3 },
+            { key: 'Enter', code: 'Enter', text: 'Enter', span: 2, row: 3 },
+            { key: 'ShiftLeft', code: 'ShiftLeft', text: 'Shift', span: 3, row: 4 },
+            { key: 'z', code: 'KeyZ', text: 'z', shiftText: 'Z', span: 1, row: 4 }, { key: 'x', code: 'KeyX', text: 'x', shiftText: 'X', span: 1, row: 4 },
+            { key: 'c', code: 'KeyC', text: 'c', shiftText: 'C', span: 1, row: 4 }, { key: 'v', code: 'KeyV', text: 'v', shiftText: 'V', span: 1, row: 4 },
+            { key: 'b', code: 'KeyB', text: 'b', shiftText: 'B', span: 1, row: 4 }, { key: 'n', code: 'KeyN', text: 'n', shiftText: 'N', span: 1, row: 4 },
+            { key: 'm', code: 'KeyM', text: 'm', shiftText: 'M', span: 1, row: 4 },
+            { key: 'Comma', code: 'Comma', text: ',', shiftText: '<', span: 1, row: 4 },
+            { key: 'Period', code: 'Period', text: '.', shiftText: '>', span: 1, row: 4 },
+            { key: 'Slash', code: 'Slash', text: '/', shiftText: '?', span: 1, row: 4 },
+            { key: 'ShiftRight', code: 'ShiftRight', text: 'Shift', span: 3, row: 4 },
+            { key: 'ControlLeft', code: 'ControlLeft', text: 'Ctrl', span: 2, row: 5 },
+            { key: 'MetaLeft', code: 'MetaLeft', text: 'Win', span: 1, row: 5 },
+            { key: 'AltLeft', code: 'AltLeft', text: 'Alt', span: 2, row: 5 },
+            { key: 'Space', code: 'Space', text: ' ', span: 5, row: 5 },
+            { key: 'AltRight', code: 'AltRight', text: 'Alt', span: 2, row: 5 },
+            { key: 'ContextMenu', code: 'ContextMenu', text: 'Menu', span: 1, row: 5 },
+            { key: 'ControlRight', code: 'ControlRight', text: 'Ctrl', span: 2, row: 5 }
+        ];
+
+        // DOM Elements
+        const keyboardElement = document.getElementById('keyboard');
+        const targetTextDisplayElement = document.getElementById('targetTextDisplay');
+        const wpmElement = document.getElementById('wpm');
+        const accuracyElement = document.getElementById('accuracy');
+        const scoreElement = document.getElementById('score');
+        const timerElement = document.getElementById('timer');
+        const apmElement = document.getElementById('apm');
+        const startPracticeBtn = document.getElementById('startPracticeBtn');
+        const resetPracticeBtn = document.getElementById('resetPracticeBtn');
+        const customPracticeNameInput = document.getElementById('customPracticeNameInput');
+        const addCustomPracticeBtn = document.getElementById('addCustomPracticeBtn');
+        const customFilePracticeInput = document.getElementById('customFilePracticeInput');
+        const loadDefaultTextBtn = document.getElementById('loadDefaultTextBtn');
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIconSun = document.getElementById('themeIconSun');
+        const themeIconMoon = document.getElementById('themeIconMoon');
+        const customAlertModal = document.getElementById('customAlertModal');
+        const customAlertMessage = document.getElementById('customAlertMessage');
+        const customAlertOkBtn = document.getElementById('customAlertOkBtn');
+
+        // State Variables
+        let currentTargetText = "";
+        let currentIndex = 0;
+        let correctStrokes = 0;
+        let totalStrokes = 0;
+        let errorStrokes = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let practiceActive = false;
+        let isShiftPressed = false;
+        let isCtrlPressed = false;
+        let isAltPressed = false;
+        let isCapsLocked = false;
+
+        // Default practice texts
+        const defaultPracticeTexts = [
+            { name: "狐狸跳懒狗", content: "The quick brown fox jumps over the lazy dog." },
+            { name: "装箱五打酒", content: "Pack my box with five dozen liquor jugs." },
+            { name: "字母表练习", content: "abcdefghijklmnopqrstuvwxyz" },
+            { name: "数字练习", content: "1234567890" },
+            { name: "快捷键示例", content: "Ctrl+C Alt+Tab Shift+A F5" }
+        ];
+        let userUploadedTexts = []; // Stores {name, content} of user texts
+
+        // --- Utility Functions ---
+        function showAlert(message) {
+            customAlertMessage.textContent = message;
+            customAlertModal.style.display = 'flex';
+        }
+        customAlertOkBtn.addEventListener('click', () => { customAlertModal.style.display = 'none'; });
+
+        // --- Keyboard Initialization ---
+        function initKeyboard() {
+            keyboardElement.innerHTML = ''; // Clear previous keys
+            keyboardLayout.forEach(keyInfo => {
+                const keyElement = document.createElement('div');
+                keyElement.classList.add('key');
+                if (keyInfo.type === 'spacer') {
+                    keyElement.classList.add('placeholder');
+                } else {
+                    keyElement.textContent = keyInfo.text;
+                    keyElement.dataset.key = keyInfo.code; // Use 'code' for reliable mapping
+                    if (keyInfo.text.length > 1 && keyInfo.text !== ' ') {
+                        keyElement.classList.add(`key-${keyInfo.text.toLowerCase().replace(' ', '-')}`);
+                    }
+                }
+                // Apply grid span and row positioning
+                keyElement.style.gridColumn = `span ${keyInfo.span || 1}`;
+                keyElement.style.gridRow = `${(keyInfo.row || 0) + 1}`; // CSS grid is 1-indexed
+                keyboardElement.appendChild(keyElement);
+            });
+        }
+
+        // --- Practice Text Display ---
+        function renderInitialTargetText() {
+            targetTextDisplayElement.innerHTML = ''; // Clear previous text
+            if (!currentTargetText) {
+                targetTextDisplayElement.textContent = '按 "开始练习" 按钮或选择/加载练习文本';
+                return;
+            }
+            // Create a span for each character for individual styling
+            for (let i = 0; i < currentTargetText.length; i++) {
+                const charSpan = document.createElement('span');
+                charSpan.textContent = currentTargetText[i] === ' ' ? '\u00A0' : currentTargetText[i]; // Use non-breaking space
+                charSpan.dataset.index = i;
+                charSpan.classList.add(i === 0 ? 'char-current' : 'char-pending'); // Highlight first char
+                targetTextDisplayElement.appendChild(charSpan);
+            }
+        }
+
+        // --- Event Handlers for Typing ---
+        function handleKeyDown(e) {
+            // Allow default for some F-keys if not practicing
+            if (!practiceActive && (e.key.startsWith('F') || e.key === 'Escape')) {
+                const keyElement = keyboardElement.querySelector(`.key[data-key="${e.code}"]`);
+                if (keyElement) {
+                    keyElement.classList.add('active'); // Visual feedback only
+                    setTimeout(() => keyElement.classList.remove('active'), 100);
+                }
+                if (e.key === 'F5' || e.key === 'F11' || e.key === 'F12') return; // Allow browser default
+            }
+            e.preventDefault(); // Prevent default browser actions (e.g., scrolling, find)
+
+            const keyCode = e.code;
+            const keyElement = keyboardElement.querySelector(`.key[data-key="${keyCode}"]`);
+
+            if (keyElement) keyElement.classList.add('active'); // Highlight physical key
+
+            // Track modifier keys
+            if (keyCode === 'ShiftLeft' || keyCode === 'ShiftRight') isShiftPressed = true;
+            if (keyCode === 'ControlLeft' || keyCode === 'ControlRight') isCtrlPressed = true;
+            if (keyCode === 'AltLeft' || keyCode === 'AltRight') isAltPressed = true;
+            if (keyCode === 'CapsLock') {
+                isCapsLocked = !isCapsLocked;
+                const capsLockKey = keyboardElement.querySelector(`.key[data-key="CapsLock"]`);
+                if (capsLockKey) { isCapsLocked ? capsLockKey.classList.add('active') : capsLockKey.classList.remove('active'); }
+            }
+
+            // If practice isn't active or text is complete, do nothing further with input
+            if (!practiceActive || currentIndex >= currentTargetText.length) {
+                if (keyElement && keyCode !== 'CapsLock') { // Remove highlight unless it's CapsLock
+                    setTimeout(() => keyElement.classList.remove('active'), 100);
+                }
+                return;
+            }
+
+            totalStrokes++; // Count every key press for APM
+
+            let expectedChar = currentTargetText[currentIndex];
+            let typedChar = e.key; // Browser provides the character considering Shift/CapsLock
+            let isCorrect = false;
+
+            const currentDisplaySpan = targetTextDisplayElement.querySelector(`span[data-index="${currentIndex}"]`);
+
+            // --- Logic for checking correctness ---
+            // Case 1: Practicing a shortcut (e.g., "Ctrl+C")
+            if (currentTargetText.includes('+') && (isCtrlPressed || isAltPressed || isShiftPressed || e.key.startsWith("F"))) {
+                let pressedShortcut = "";
+                if (isCtrlPressed) pressedShortcut += "Ctrl+";
+                if (isAltPressed) pressedShortcut += "Alt+";
+                // For Shift, if it's part of a character (e.g. Shift+a = A), e.key already reflects 'A'.
+                // If it's a modifier for a non-alpha key (e.g. Shift+Tab), then add "Shift+"
+                if (isShiftPressed && !(e.key.length === 1 && e.key.match(/[a-zA-Z]/i))) {
+                    pressedShortcut += "Shift+";
+                }
+
+                // Add the main key (e.g., 'C', 'V', 'Tab', 'F5')
+                if (e.key !== "Control" && e.key !== "Alt" && e.key !== "Shift") {
+                    pressedShortcut += e.key;
+                }
+                // Compare pressed shortcut with target shortcut (case-insensitive for flexibility)
+                if (pressedShortcut.toUpperCase() === currentTargetText.toUpperCase()) {
+                    isCorrect = true;
+                }
+            }
+            // Case 2: Standard character typing
+            else if (!currentTargetText.includes('+')) {
+                if (typedChar.length === 1) { // Regular printable characters
+                    // e.key already considers Shift. For CapsLock, if expected is 'a' and typed is 'A', it's correct.
+                    if (expectedChar.toLowerCase() === typedChar.toLowerCase()) {
+                        // This condition handles cases like:
+                        // expected 'a', typed 'a' (no mods) -> correct
+                        // expected 'A', typed 'A' (shift) -> correct (e.key is 'A')
+                        // expected 'a', typed 'A' (caps) -> correct
+                        // expected 'A', typed 'a' (caps+shift) -> correct (e.key is 'a')
+                        isCorrect = (expectedChar === typedChar) ||
+                            (isCapsLocked && expectedChar.toUpperCase() === typedChar.toUpperCase() && expectedChar.toLowerCase() === typedChar.toLowerCase());
+                        if (expectedChar === typedChar) isCorrect = true; // Exact match
+                        // More specific checks for CapsLock and Shift if needed, but e.key is generally reliable
+                        else if (isCapsLocked && !isShiftPressed && expectedChar.toUpperCase() === typedChar && typedChar.match(/[A-Z]/i)) isCorrect = true;
+                        else if (isShiftPressed && expectedChar === typedChar) isCorrect = true;
+                        else if (!isShiftPressed && !isCapsLocked && expectedChar === typedChar) isCorrect = true;
+                    }
+                } else if (e.code === "Space" && expectedChar === " ") { // Space key
+                    isCorrect = true;
+                } else if (e.code === "Enter" && expectedChar === "\n") { // Enter for newline
+                    isCorrect = true;
+                }
+                // Fallback for exact match if other logic didn't catch it (e.g. symbols)
+                if (expectedChar === typedChar && !isCorrect) isCorrect = true;
+            }
+
+            // Update display for the typed character
+            if (currentDisplaySpan) {
+                currentDisplaySpan.classList.remove('char-current', 'char-pending', 'char-typed-incorrect');
+                currentDisplaySpan.classList.add(isCorrect ? 'char-typed-correct' : 'char-typed-incorrect');
+            }
+
+            // Process correct or incorrect input
+            if (isCorrect) {
+                correctStrokes++;
+                if (keyElement) keyElement.classList.add('correct'); // Visual feedback on virtual key
+                currentIndex++;
+                if (currentTargetText.includes('+') && isCorrect) { // If a shortcut was matched
+                    currentIndex = currentTargetText.length; // Mark shortcut as complete
+                }
+                // Move 'current' highlight to the next character
+                if (currentIndex < currentTargetText.length) {
+                    const nextDisplaySpan = targetTextDisplayElement.querySelector(`span[data-index="${currentIndex}"]`);
+                    if (nextDisplaySpan) {
+                        nextDisplaySpan.classList.remove('char-pending');
+                        nextDisplaySpan.classList.add('char-current');
+                    }
+                }
+            } else {
+                errorStrokes++; // Increment error count for accuracy
+                if (keyElement) keyElement.classList.add('incorrect'); // Visual feedback
+            }
+
+            // Remove visual feedback from virtual key (unless CapsLock is on)
+            if (keyElement && keyCode !== 'CapsLock') {
+                setTimeout(() => { keyElement.classList.remove('active', 'correct', 'incorrect'); }, 200);
+            } else if (keyElement && keyCode === 'CapsLock' && !isCapsLocked) { // If CapsLock was turned off
+                setTimeout(() => keyElement.classList.remove('correct', 'incorrect'), 200); // Remove color, but not 'active' if it was toggled off
+            }
+
+            updateStats(); // Update WPM, APM, accuracy, etc.
+
+            // Check if practice is complete
+            if (currentIndex >= currentTargetText.length) {
+                endPractice();
+            }
+        }
+
+        function handleKeyUp(e) {
+            const keyCode = e.code;
+            const keyElement = keyboardElement.querySelector(`.key[data-key="${keyCode}"]`);
+            // Remove 'active' class from non-CapsLock keys on keyup
+            if (keyElement && keyCode !== 'CapsLock') {
+                keyElement.classList.remove('active');
+            }
+            // Update modifier key states
+            if (keyCode === 'ShiftLeft' || keyCode === 'ShiftRight') isShiftPressed = false;
+            if (keyCode === 'ControlLeft' || keyCode === 'ControlRight') isCtrlPressed = false;
+            if (keyCode === 'AltLeft' || keyCode === 'AltRight') isAltPressed = false;
+        }
+
+        // --- Statistics Update ---
+        function updateStats() {
+            const currentTime = new Date();
+            const timeElapsed = startTime ? (currentTime - startTime) / 1000 : 0; // in seconds
+
+            if (timeElapsed > 0) {
+                // WPM: (correctly typed words / time in minutes). A word is avg 5 chars.
+                const wpm = Math.round((correctStrokes / 5) / (timeElapsed / 60));
+                wpmElement.textContent = `WPM: ${wpm > 0 ? wpm : 0}`;
+                // APM: (total key strokes / time in minutes)
+                const apm = Math.round(totalStrokes / (timeElapsed / 60));
+                apmElement.textContent = `APM: ${apm > 0 ? apm : 0}`;
+            } else {
+                wpmElement.textContent = `WPM: 0`;
+                apmElement.textContent = `APM: 0`;
+            }
+            // Accuracy: (correct strokes on target / (correct strokes + error strokes on target)) * 100
+            const relevantStrokesForAccuracy = correctStrokes + errorStrokes;
+            const accuracy = relevantStrokesForAccuracy > 0 ? Math.round((correctStrokes / relevantStrokesForAccuracy) * 100) : 0;
+            accuracyElement.textContent = `准确率: ${accuracy}%`;
+            // Score: A simple formula
+            const score = Math.max(0, Math.round(correctStrokes * (accuracy / 100) - (errorStrokes / 2)));
+            scoreElement.textContent = `得分: ${score}`;
+            timerElement.textContent = `时间: ${Math.round(timeElapsed)}s`;
+        }
+
+        // --- Practice Session Control ---
+        function startPractice(textToPracticeContent) {
+            if (practiceActive) return; // Prevent starting if already active
+
+            currentTargetText = textToPracticeContent; // Set the text to practice
+            if (!currentTargetText) {
+                showAlert("没有可练习的文本。请选择或加载练习文本。");
+                return;
+            }
+            // Reset practice variables
+            currentIndex = 0; correctStrokes = 0; totalStrokes = 0; errorStrokes = 0;
+            startTime = new Date();
+            practiceActive = true;
+
+            // Update UI state
+            startPracticeBtn.disabled = true;
+            resetPracticeBtn.disabled = false;
+            customPracticeNameInput.disabled = true;
+            addCustomPracticeBtn.disabled = true;
+            loadDefaultTextBtn.disabled = true;
+
+            renderInitialTargetText(); // Display the text to be typed
+            updateStats(); // Initial stats display (mostly zeros)
+
+            // Start timer for continuous stat updates
+            timerInterval = setInterval(() => { if (practiceActive) updateStats(); }, 1000);
+
+            // Add global event listeners for typing
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+        }
+
+        function endPractice() {
+            practiceActive = false;
+            clearInterval(timerInterval); // Stop the timer
+            timerInterval = null;
+            updateStats(); // Final update of stats
+
+            // Re-enable controls
+            startPracticeBtn.disabled = false;
+            resetPracticeBtn.disabled = true;
+            customPracticeNameInput.disabled = false;
+            addCustomPracticeBtn.disabled = false;
+            loadDefaultTextBtn.disabled = false;
+
+            // Remove global event listeners
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('keyup', handleKeyUp);
+
+            // Display completion message
+            targetTextDisplayElement.innerHTML = `练习完成! 得分: ${scoreElement.textContent.split(':')[1].trim()}`;
+
+            // Reset modifier key states (CapsLock state persists as it's a toggle)
+            isShiftPressed = false; isCtrlPressed = false; isAltPressed = false;
+        }
+
+        function resetPractice() {
+            if (practiceActive) endPractice(); // Ensure current session is properly ended
+            currentTargetText = ""; // Clear current text
+            targetTextDisplayElement.innerHTML = '按 "开始练习" 按钮或选择/加载练习文本'; // Reset display message
+            // Reset all stats to initial values
+            wpmElement.textContent = "WPM: 0";
+            accuracyElement.textContent = "准确率: 0%";
+            scoreElement.textContent = "得分: 0";
+            timerElement.textContent = "时间: 0s";
+            apmElement.textContent = "APM: 0";
+
+            // Clear any lingering visual feedback from virtual keys (except active CapsLock)
+            document.querySelectorAll('.key.active, .key.correct, .key.incorrect').forEach(k => {
+                if (k.dataset.key !== 'CapsLock' || !isCapsLocked) { // Don't remove active from CapsLock if it's on
+                    k.classList.remove('active', 'correct', 'incorrect');
+                }
+            });
+        }
+
+        // --- Custom Practice Text Handling ---
+        function addCustomPracticeText() {
+            const textNameFromInput = customPracticeNameInput.value.trim(); // Can be a name or pasted text
+
+            if (customFilePracticeInput.files.length > 0) { // Prioritize file input
+                const file = customFilePracticeInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const fileContent = e.target.result;
+                    if (fileContent) {
+                        const nameToUse = textNameFromInput || file.name; // Use input name or filename
+                        userUploadedTexts.push({ name: nameToUse, content: fileContent });
+                        showAlert(`"${nameToUse}" 已添加并准备开始练习。`);
+                        startPractice(fileContent); // Start practice with the new file content
+                        customPracticeNameInput.value = ''; // Clear name input
+                        customFilePracticeInput.value = ''; // Important to clear file input for next selection
+                    } else {
+                        showAlert("文件内容为空或无法读取。");
+                    }
+                };
+                reader.onerror = function () {
+                    showAlert("读取文件失败。");
+                };
+                reader.readAsText(file); // Read the file as plain text
+            } else if (textNameFromInput) { // If no file, use the text from input field as content
+                // Assuming the input field is for the content itself if no file is chosen
+                userUploadedTexts.push({ name: "自定义粘贴文本 " + (userUploadedTexts.length + 1), content: textNameFromInput });
+                showAlert(`自定义粘贴文本已添加并准备开始练习。`);
+                startPractice(textNameFromInput); // Start practice with pasted text
+                customPracticeNameInput.value = ''; // Clear input field
+            } else {
+                showAlert("请输入练习文本或选择一个文件。");
+            }
+        }
+
+        // Event listener for the "Add Local Practice File" button
+        addCustomPracticeBtn.addEventListener('click', () => {
+            customFilePracticeInput.click(); // Trigger the hidden file input
+        });
+
+        // Event listener for when a file is selected via the hidden file input
+        customFilePracticeInput.addEventListener('change', addCustomPracticeText);
+
+        // Allow Enter key in the text input to add pasted text (if no file is selected)
+        customPracticeNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !customFilePracticeInput.files.length) {
+                addCustomPracticeText();
+            }
+        });
+
+        // --- Theme Toggling ---
+        function updateThemeIcon(isDarkMode) {
+            themeIconSun.style.display = isDarkMode ? 'block' : 'none';
+            themeIconMoon.style.display = isDarkMode ? 'none' : 'block';
+            themeToggleBtn.setAttribute('aria-label', isDarkMode ? 'Switch to light theme' : 'Switch to dark theme');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); // Save theme preference
+            updateThemeIcon(isDarkMode);
+        });
+
+        // --- Document Ready / Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initKeyboard(); // Build the virtual keyboard
+            resetPracticeBtn.disabled = true; // Reset button disabled initially
+
+            // Load and apply saved theme, or default to dark
+            const savedTheme = localStorage.getItem('theme');
+            let initialThemeIsDark = true; // Default to dark theme
+            if (savedTheme) {
+                initialThemeIsDark = savedTheme === 'dark';
+            } else {
+                localStorage.setItem('theme', 'dark'); // Save default if not set
+            }
+
+            if (initialThemeIsDark) {
+                document.body.classList.add('dark-mode');
+            }
+            updateThemeIcon(initialThemeIsDark); // Set the correct theme icon
+
+            resetPractice(); // Set initial UI state for practice area
+
+            // Event listener for "Start Practice" button
+            startPracticeBtn.addEventListener('click', () => {
+                // If starting without specific text, load a random default one
+                const randomDefaultText = defaultPracticeTexts[Math.floor(Math.random() * defaultPracticeTexts.length)];
+                startPractice(randomDefaultText.content);
+            });
+            // Event listener for "Reset Practice" button
+            resetPracticeBtn.addEventListener('click', resetPractice);
+
+            // Event listener for "Load Default Practice Text" button
+            loadDefaultTextBtn.addEventListener('click', () => {
+                if (!practiceActive) { // Only if not already practicing
+                    const randomDefaultText = defaultPracticeTexts[Math.floor(Math.random() * defaultPracticeTexts.length)];
+                    startPractice(randomDefaultText.content);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
