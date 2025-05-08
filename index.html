@@ -170,20 +170,14 @@
             align-items: center;
             justify-content: center;
             gap: 1rem;
-            /* Space between title and QR code */
             margin-bottom: 1.5rem;
-            /* Tailwind mb-6 */
             margin-top: 1rem;
-            /* Add some space at the top */
             flex-wrap: wrap;
-            /* Allow wrapping on small screens */
         }
 
         .main-title {
             font-size: 2.25rem;
-            /* Tailwind text-4xl */
             font-weight: 700;
-            /* Tailwind font-bold */
             color: var(--title-text);
             text-align: center;
         }
@@ -194,7 +188,6 @@
             border-radius: 6px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             object-fit: contain;
-            /* Ensures the image scales nicely within the bounds */
         }
 
         .keyboard {
@@ -390,6 +383,14 @@
             margin-bottom: 15px;
         }
 
+        .load-buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
 
         #themeSwitcherContainer {
             position: fixed;
@@ -525,13 +526,22 @@
                 width: 100%;
             }
 
-            #loadDefaultTextBtnContainer {
-                margin-top: 10px;
+            .load-buttons-container {
+                flex-direction: column;
+                align-items: stretch;
                 width: 100%;
             }
 
-            #loadDefaultTextBtn {
+            .load-buttons-container .app-button {
                 width: 100%;
+                margin: 5px 0;
+            }
+
+            .controls {
+                /* Adjust main controls for smaller screens */
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
@@ -563,7 +573,7 @@
 
     <div class="practice-area">
         <div class="target-text-display" id="targetTextDisplay">
-            按 "开始练习" 按钮开始
+            按 "开始练习" 或 "自由练习" 按钮开始
         </div>
 
         <div class="stats">
@@ -575,7 +585,8 @@
         </div>
 
         <div class="controls text-center mt-4">
-            <button id="startPracticeBtn" class="app-button">开始练习</button>
+            <button id="freePracticeBtn" class="app-button">自由练习</button> <button id="startPracticeBtn"
+                class="app-button">开始练习</button>
             <button id="resetPracticeBtn" class="app-button" disabled>重置练习</button>
         </div>
     </div>
@@ -589,8 +600,9 @@
                 class="flex-grow focus:ring-indigo-500 focus:border-indigo-500">
             <button id="addCustomPracticeBtn" class="app-button text-white px-4 py-2 rounded-r-md">添加本地练习文件</button>
         </div>
-        <div id="loadDefaultTextBtnContainer" class="text-center mt-3">
+        <div class="load-buttons-container">
             <button id="loadDefaultTextBtn" class="app-button">加载默认练习文本</button>
+            <button id="loadSc2TextBtn" class="app-button">加载星际争霸练习</button>
         </div>
     </div>
 
@@ -666,11 +678,13 @@
         const timerElement = document.getElementById('timer');
         const apmElement = document.getElementById('apm');
         const startPracticeBtn = document.getElementById('startPracticeBtn');
+        const freePracticeBtn = document.getElementById('freePracticeBtn'); // New button reference
         const resetPracticeBtn = document.getElementById('resetPracticeBtn');
         const customPracticeNameInput = document.getElementById('customPracticeNameInput');
         const addCustomPracticeBtn = document.getElementById('addCustomPracticeBtn');
         const customFilePracticeInput = document.getElementById('customFilePracticeInput');
         const loadDefaultTextBtn = document.getElementById('loadDefaultTextBtn');
+        const loadSc2TextBtn = document.getElementById('loadSc2TextBtn');
         const themeToggleBtn = document.getElementById('themeToggleBtn');
         const themeIconSun = document.getElementById('themeIconSun');
         const themeIconMoon = document.getElementById('themeIconMoon');
@@ -687,19 +701,31 @@
         let startTime = null;
         let timerInterval = null;
         let practiceActive = false;
+        let isFreePracticeMode = false; // New state for free practice
         let isShiftPressed = false;
         let isCtrlPressed = false;
         let isAltPressed = false;
         let isCapsLocked = false;
 
-        // Default practice texts
-        const defaultPracticeTexts = [
-            { name: "狐狸跳懒狗", content: "The quick brown fox jumps over the lazy dog." },
-            { name: "装箱五打酒", content: "Pack my box with five dozen liquor jugs." },
-            { name: "字母表练习", content: "abcdefghijklmnopqrstuvwxyz" },
-            { name: "数字练习", content: "1234567890" },
-            { name: "快捷键示例", content: "Ctrl+C Alt+Tab Shift+A F5" }
+        // Default practice texts - Separated for clarity
+        const generalPracticeTexts = [
+            { name: "通用 - 狐狸跳懒狗", content: "The quick brown fox jumps over the lazy dog." },
+            { name: "通用 - 装箱五打酒", content: "Pack my box with five dozen liquor jugs." },
+            { name: "通用 - 字母表练习", content: "abcdefghijklmnopqrstuvwxyz" },
+            { name: "通用 - 数字练习", content: "1234567890" },
+            { name: "通用 - 常用快捷键", content: "Ctrl+C Ctrl+V Ctrl+X Alt+Tab Shift+A F5" }
         ];
+        const sc2PracticeTexts = [
+            { name: "星际2 - 基础编队与选择", content: "Ctrl+1 1 Ctrl+2 2 F1 F2" },
+            { name: "星际2 - 基础指令", content: "A S H P M" }, // Attack, Stop, Hold, Patrol, Move
+            { name: "星际2 - 人族 (Terran) 基础生产", content: "S D F A E R T V" }, // SCV, Supply, Refinery, Barracks(Marine), Factory(Hellion), Starport(Viking), EngineeringBay(Upgrade), Armory(Upgrade)
+            { name: "星际2 - 人族 (Terran) 常用技能", content: "T E D C" }, // Stimpack, SiegeMode, MedivacHeal(auto), Cloak(Banshee/Ghost)
+            { name: "星际2 - 虫族 (Zerg) 基础生产", content: "S D V O Z R H L" }, // Drone, Overlord, SpawningPool, Zergling, RoachWarren, Roach, HydraliskDen, Hydralisk
+            { name: "星际2 - 虫族 (Zerg) 常用运营/技能", content: "V C Q E" }, // SpawnLarva, CreepTumor, QueenSelect, Transfuse
+            { name: "星际2 - 神族 (Protoss) 基础生产", content: "E B G A S C R V" }, // Probe, Pylon, Gateway, Zealot, CyberneticsCore, Stalker, RoboticsFacility, Observer/Immortal
+            { name: "星际2 - 神族 (Protoss) 常用技能", content: "B C F T G" }  // Blink, Charge, ForceField, GuardianShield, ChronoBoost
+        ];
+
         let userUploadedTexts = []; // Stores {name, content} of user texts
 
         // --- Utility Functions ---
@@ -711,7 +737,7 @@
 
         // --- Keyboard Initialization ---
         function initKeyboard() {
-            keyboardElement.innerHTML = ''; // Clear previous keys
+            keyboardElement.innerHTML = '';
             keyboardLayout.forEach(keyInfo => {
                 const keyElement = document.createElement('div');
                 keyElement.classList.add('key');
@@ -719,32 +745,32 @@
                     keyElement.classList.add('placeholder');
                 } else {
                     keyElement.textContent = keyInfo.text;
-                    keyElement.dataset.key = keyInfo.code; // Use 'code' for reliable mapping
+                    keyElement.dataset.key = keyInfo.code;
                     if (keyInfo.text.length > 1 && keyInfo.text !== ' ') {
                         keyElement.classList.add(`key-${keyInfo.text.toLowerCase().replace(' ', '-')}`);
                     }
                 }
-                // Apply grid span and row positioning
                 keyElement.style.gridColumn = `span ${keyInfo.span || 1}`;
-                keyElement.style.gridRow = `${(keyInfo.row || 0) + 1}`; // CSS grid is 1-indexed
+                keyElement.style.gridRow = `${(keyInfo.row || 0) + 1}`;
                 keyboardElement.appendChild(keyElement);
             });
         }
 
         // --- Practice Text Display ---
         function renderInitialTargetText() {
-            targetTextDisplayElement.innerHTML = ''; // Clear previous text
-            if (!currentTargetText) {
-                targetTextDisplayElement.textContent = '按 "开始练习" 按钮或选择/加载练习文本';
-                return;
-            }
-            // Create a span for each character for individual styling
-            for (let i = 0; i < currentTargetText.length; i++) {
-                const charSpan = document.createElement('span');
-                charSpan.textContent = currentTargetText[i] === ' ' ? '\u00A0' : currentTargetText[i]; // Use non-breaking space
-                charSpan.dataset.index = i;
-                charSpan.classList.add(i === 0 ? 'char-current' : 'char-pending'); // Highlight first char
-                targetTextDisplayElement.appendChild(charSpan);
+            targetTextDisplayElement.innerHTML = '';
+            if (isFreePracticeMode) {
+                targetTextDisplayElement.textContent = '自由练习中... 按 Enter 结束';
+            } else if (!currentTargetText) {
+                targetTextDisplayElement.textContent = '按 "开始练习" 或 "自由练习" 按钮开始';
+            } else {
+                for (let i = 0; i < currentTargetText.length; i++) {
+                    const charSpan = document.createElement('span');
+                    charSpan.textContent = currentTargetText[i] === ' ' ? '\u00A0' : currentTargetText[i];
+                    charSpan.dataset.index = i;
+                    charSpan.classList.add(i === 0 ? 'char-current' : 'char-pending');
+                    targetTextDisplayElement.appendChild(charSpan);
+                }
             }
         }
 
@@ -754,17 +780,26 @@
             if (!practiceActive && (e.key.startsWith('F') || e.key === 'Escape')) {
                 const keyElement = keyboardElement.querySelector(`.key[data-key="${e.code}"]`);
                 if (keyElement) {
-                    keyElement.classList.add('active'); // Visual feedback only
+                    keyElement.classList.add('active');
                     setTimeout(() => keyElement.classList.remove('active'), 100);
                 }
-                if (e.key === 'F5' || e.key === 'F11' || e.key === 'F12') return; // Allow browser default
+                if (e.key === 'F5' || e.key === 'F11' || e.key === 'F12') return;
             }
-            e.preventDefault(); // Prevent default browser actions (e.g., scrolling, find)
+
+            // Special handling for Enter in free practice mode
+            if (isFreePracticeMode && e.key === 'Enter') {
+                e.preventDefault(); // Prevent default Enter behavior
+                endPractice();      // End the free practice session
+                return;
+            }
+
+            // Prevent default for other keys during any active practice
+            if (practiceActive) e.preventDefault();
 
             const keyCode = e.code;
             const keyElement = keyboardElement.querySelector(`.key[data-key="${keyCode}"]`);
 
-            if (keyElement) keyElement.classList.add('active'); // Highlight physical key
+            if (keyElement) keyElement.classList.add('active');
 
             // Track modifier keys
             if (keyCode === 'ShiftLeft' || keyCode === 'ShiftRight') isShiftPressed = true;
@@ -776,9 +811,9 @@
                 if (capsLockKey) { isCapsLocked ? capsLockKey.classList.add('active') : capsLockKey.classList.remove('active'); }
             }
 
-            // If practice isn't active or text is complete, do nothing further with input
-            if (!practiceActive || currentIndex >= currentTargetText.length) {
-                if (keyElement && keyCode !== 'CapsLock') { // Remove highlight unless it's CapsLock
+            // If practice isn't active, only show key highlight
+            if (!practiceActive) {
+                if (keyElement && keyCode !== 'CapsLock') {
                     setTimeout(() => keyElement.classList.remove('active'), 100);
                 }
                 return;
@@ -786,110 +821,108 @@
 
             totalStrokes++; // Count every key press for APM
 
-            let expectedChar = currentTargetText[currentIndex];
-            let typedChar = e.key; // Browser provides the character considering Shift/CapsLock
-            let isCorrect = false;
-
-            const currentDisplaySpan = targetTextDisplayElement.querySelector(`span[data-index="${currentIndex}"]`);
-
-            // --- Logic for checking correctness ---
-            // Case 1: Practicing a shortcut (e.g., "Ctrl+C")
-            if (currentTargetText.includes('+') && (isCtrlPressed || isAltPressed || isShiftPressed || e.key.startsWith("F"))) {
-                let pressedShortcut = "";
-                if (isCtrlPressed) pressedShortcut += "Ctrl+";
-                if (isAltPressed) pressedShortcut += "Alt+";
-                // For Shift, if it's part of a character (e.g. Shift+a = A), e.key already reflects 'A'.
-                // If it's a modifier for a non-alpha key (e.g. Shift+Tab), then add "Shift+"
-                if (isShiftPressed && !(e.key.length === 1 && e.key.match(/[a-zA-Z]/i))) {
-                    pressedShortcut += "Shift+";
-                }
-
-                // Add the main key (e.g., 'C', 'V', 'Tab', 'F5')
-                if (e.key !== "Control" && e.key !== "Alt" && e.key !== "Shift") {
-                    pressedShortcut += e.key;
-                }
-                // Compare pressed shortcut with target shortcut (case-insensitive for flexibility)
-                if (pressedShortcut.toUpperCase() === currentTargetText.toUpperCase()) {
-                    isCorrect = true;
-                }
-            }
-            // Case 2: Standard character typing
-            else if (!currentTargetText.includes('+')) {
-                if (typedChar.length === 1) { // Regular printable characters
-                    // e.key already considers Shift. For CapsLock, if expected is 'a' and typed is 'A', it's correct.
-                    if (expectedChar.toLowerCase() === typedChar.toLowerCase()) {
-                        // This condition handles cases like:
-                        // expected 'a', typed 'a' (no mods) -> correct
-                        // expected 'A', typed 'A' (shift) -> correct (e.key is 'A')
-                        // expected 'a', typed 'A' (caps) -> correct
-                        // expected 'A', typed 'a' (caps+shift) -> correct (e.key is 'a')
-                        isCorrect = (expectedChar === typedChar) ||
-                            (isCapsLocked && expectedChar.toUpperCase() === typedChar.toUpperCase() && expectedChar.toLowerCase() === typedChar.toLowerCase());
-                        if (expectedChar === typedChar) isCorrect = true; // Exact match
-                        // More specific checks for CapsLock and Shift if needed, but e.key is generally reliable
-                        else if (isCapsLocked && !isShiftPressed && expectedChar.toUpperCase() === typedChar && typedChar.match(/[A-Z]/i)) isCorrect = true;
-                        else if (isShiftPressed && expectedChar === typedChar) isCorrect = true;
-                        else if (!isShiftPressed && !isCapsLocked && expectedChar === typedChar) isCorrect = true;
-                    }
-                } else if (e.code === "Space" && expectedChar === " ") { // Space key
-                    isCorrect = true;
-                } else if (e.code === "Enter" && expectedChar === "\n") { // Enter for newline
-                    isCorrect = true;
-                }
-                // Fallback for exact match if other logic didn't catch it (e.g. symbols)
-                if (expectedChar === typedChar && !isCorrect) isCorrect = true;
-            }
-
-            // Update display for the typed character
-            if (currentDisplaySpan) {
-                currentDisplaySpan.classList.remove('char-current', 'char-pending', 'char-typed-incorrect');
-                currentDisplaySpan.classList.add(isCorrect ? 'char-typed-correct' : 'char-typed-incorrect');
-            }
-
-            // Process correct or incorrect input
-            if (isCorrect) {
-                correctStrokes++;
-                if (keyElement) keyElement.classList.add('correct'); // Visual feedback on virtual key
-                currentIndex++;
-                if (currentTargetText.includes('+') && isCorrect) { // If a shortcut was matched
-                    currentIndex = currentTargetText.length; // Mark shortcut as complete
-                }
-                // Move 'current' highlight to the next character
-                if (currentIndex < currentTargetText.length) {
-                    const nextDisplaySpan = targetTextDisplayElement.querySelector(`span[data-index="${currentIndex}"]`);
-                    if (nextDisplaySpan) {
-                        nextDisplaySpan.classList.remove('char-pending');
-                        nextDisplaySpan.classList.add('char-current');
-                    }
-                }
+            // --- Logic for Free Practice vs Guided Practice ---
+            if (isFreePracticeMode) {
+                // In free practice, we only care about counting strokes and highlighting keys
+                // No correctness check needed. Enter key is handled above to end practice.
             } else {
-                errorStrokes++; // Increment error count for accuracy
-                if (keyElement) keyElement.classList.add('incorrect'); // Visual feedback
-            }
+                // --- Guided Practice Logic (checking correctness) ---
+                if (currentIndex >= currentTargetText.length) { // Check if guided practice text is already finished
+                    if (keyElement && keyCode !== 'CapsLock') {
+                        setTimeout(() => keyElement.classList.remove('active'), 100);
+                    }
+                    return; // Do nothing more if text is complete
+                }
+
+                let expectedChar = currentTargetText[currentIndex];
+                let typedChar = e.key;
+                let isCorrect = false;
+                const currentDisplaySpan = targetTextDisplayElement.querySelector(`span[data-index="${currentIndex}"]`);
+
+                // Check correctness (logic remains the same as before)
+                if (currentTargetText.includes('+') && (isCtrlPressed || isAltPressed || isShiftPressed || e.key.startsWith("F"))) {
+                    let pressedShortcut = "";
+                    if (isCtrlPressed) pressedShortcut += "Ctrl+";
+                    if (isAltPressed) pressedShortcut += "Alt+";
+                    if (isShiftPressed && !(e.key.length === 1 && e.key.match(/[a-zA-Z]/i))) {
+                        pressedShortcut += "Shift+";
+                    }
+                    if (e.key !== "Control" && e.key !== "Alt" && e.key !== "Shift") {
+                        pressedShortcut += e.key;
+                    }
+                    if (pressedShortcut.toUpperCase() === currentTargetText.toUpperCase()) {
+                        isCorrect = true;
+                    }
+                }
+                else if (!currentTargetText.includes('+')) {
+                    if (typedChar.length === 1) {
+                        if (expectedChar.toLowerCase() === typedChar.toLowerCase()) {
+                            isCorrect = (expectedChar === typedChar) ||
+                                (isCapsLocked && expectedChar.toUpperCase() === typedChar.toUpperCase() && expectedChar.toLowerCase() === typedChar.toLowerCase());
+                            if (expectedChar === typedChar) isCorrect = true;
+                            else if (isCapsLocked && !isShiftPressed && expectedChar.toUpperCase() === typedChar && typedChar.match(/[A-Z]/i)) isCorrect = true;
+                            else if (isShiftPressed && expectedChar === typedChar) isCorrect = true;
+                            else if (!isShiftPressed && !isCapsLocked && expectedChar === typedChar) isCorrect = true;
+                        }
+                    } else if (e.code === "Space" && expectedChar === " ") {
+                        isCorrect = true;
+                    } else if (e.code === "Enter" && expectedChar === "\n") {
+                        isCorrect = true;
+                    }
+                    if (expectedChar === typedChar && !isCorrect) isCorrect = true;
+                }
+
+                // Update display based on correctness
+                if (currentDisplaySpan) {
+                    currentDisplaySpan.classList.remove('char-current', 'char-pending', 'char-typed-incorrect');
+                    currentDisplaySpan.classList.add(isCorrect ? 'char-typed-correct' : 'char-typed-incorrect');
+                }
+
+                // Process correct/incorrect input for guided practice
+                if (isCorrect) {
+                    correctStrokes++;
+                    if (keyElement) keyElement.classList.add('correct');
+                    currentIndex++;
+                    if (currentTargetText.includes('+') && isCorrect) {
+                        currentIndex = currentTargetText.length;
+                    }
+                    if (currentIndex < currentTargetText.length) {
+                        const nextDisplaySpan = targetTextDisplayElement.querySelector(`span[data-index="${currentIndex}"]`);
+                        if (nextDisplaySpan) {
+                            nextDisplaySpan.classList.remove('char-pending');
+                            nextDisplaySpan.classList.add('char-current');
+                        }
+                    }
+                } else {
+                    errorStrokes++;
+                    if (keyElement) keyElement.classList.add('incorrect');
+                }
+
+                // Check if guided practice is complete
+                if (currentIndex >= currentTargetText.length) {
+                    endPractice();
+                    // Don't remove key highlight immediately after finishing, let endPractice handle it
+                    return;
+                }
+            } // End of guided practice logic
 
             // Remove visual feedback from virtual key (unless CapsLock is on)
             if (keyElement && keyCode !== 'CapsLock') {
                 setTimeout(() => { keyElement.classList.remove('active', 'correct', 'incorrect'); }, 200);
-            } else if (keyElement && keyCode === 'CapsLock' && !isCapsLocked) { // If CapsLock was turned off
-                setTimeout(() => keyElement.classList.remove('correct', 'incorrect'), 200); // Remove color, but not 'active' if it was toggled off
+            } else if (keyElement && keyCode === 'CapsLock' && !isCapsLocked) {
+                setTimeout(() => keyElement.classList.remove('correct', 'incorrect'), 200);
             }
 
-            updateStats(); // Update WPM, APM, accuracy, etc.
+            updateStats(); // Update stats for both modes
 
-            // Check if practice is complete
-            if (currentIndex >= currentTargetText.length) {
-                endPractice();
-            }
         }
 
         function handleKeyUp(e) {
             const keyCode = e.code;
             const keyElement = keyboardElement.querySelector(`.key[data-key="${keyCode}"]`);
-            // Remove 'active' class from non-CapsLock keys on keyup
             if (keyElement && keyCode !== 'CapsLock') {
                 keyElement.classList.remove('active');
             }
-            // Update modifier key states
             if (keyCode === 'ShiftLeft' || keyCode === 'ShiftRight') isShiftPressed = false;
             if (keyCode === 'ControlLeft' || keyCode === 'ControlRight') isCtrlPressed = false;
             if (keyCode === 'AltLeft' || keyCode === 'AltRight') isAltPressed = false;
@@ -898,120 +931,151 @@
         // --- Statistics Update ---
         function updateStats() {
             const currentTime = new Date();
-            const timeElapsed = startTime ? (currentTime - startTime) / 1000 : 0; // in seconds
+            const timeElapsed = startTime ? (currentTime - startTime) / 1000 : 0;
 
+            // APM is always relevant
             if (timeElapsed > 0) {
-                // WPM: (correctly typed words / time in minutes). A word is avg 5 chars.
-                const wpm = Math.round((correctStrokes / 5) / (timeElapsed / 60));
-                wpmElement.textContent = `WPM: ${wpm > 0 ? wpm : 0}`;
-                // APM: (total key strokes / time in minutes)
                 const apm = Math.round(totalStrokes / (timeElapsed / 60));
                 apmElement.textContent = `APM: ${apm > 0 ? apm : 0}`;
             } else {
-                wpmElement.textContent = `WPM: 0`;
                 apmElement.textContent = `APM: 0`;
             }
-            // Accuracy: (correct strokes on target / (correct strokes + error strokes on target)) * 100
-            const relevantStrokesForAccuracy = correctStrokes + errorStrokes;
-            const accuracy = relevantStrokesForAccuracy > 0 ? Math.round((correctStrokes / relevantStrokesForAccuracy) * 100) : 0;
-            accuracyElement.textContent = `准确率: ${accuracy}%`;
-            // Score: A simple formula
-            const score = Math.max(0, Math.round(correctStrokes * (accuracy / 100) - (errorStrokes / 2)));
-            scoreElement.textContent = `得分: ${score}`;
+
+            // WPM, Accuracy, Score only relevant for guided practice
+            if (!isFreePracticeMode) {
+                if (timeElapsed > 0) {
+                    const wpm = Math.round((correctStrokes / 5) / (timeElapsed / 60));
+                    wpmElement.textContent = `WPM: ${wpm > 0 ? wpm : 0}`;
+                } else {
+                    wpmElement.textContent = `WPM: 0`;
+                }
+                const relevantStrokesForAccuracy = correctStrokes + errorStrokes;
+                const accuracy = relevantStrokesForAccuracy > 0 ? Math.round((correctStrokes / relevantStrokesForAccuracy) * 100) : 0;
+                accuracyElement.textContent = `准确率: ${accuracy}%`;
+                const score = Math.max(0, Math.round(correctStrokes * (accuracy / 100) - (errorStrokes / 2)));
+                scoreElement.textContent = `得分: ${score}`;
+            } else {
+                // Clear or hide stats not relevant to free practice
+                wpmElement.textContent = "WPM: -";
+                accuracyElement.textContent = "准确率: -";
+                scoreElement.textContent = "得分: -";
+            }
+
             timerElement.textContent = `时间: ${Math.round(timeElapsed)}s`;
         }
 
         // --- Practice Session Control ---
-        function startPractice(textToPracticeContent) {
-            if (practiceActive) return; // Prevent starting if already active
+        // Generic start function, handles both modes based on isFreePracticeMode flag
+        function startPracticeInternal(isFreeMode = false, textContent = null) {
+            if (practiceActive) return;
 
-            currentTargetText = textToPracticeContent; // Set the text to practice
-            if (!currentTargetText) {
+            isFreePracticeMode = isFreeMode;
+            currentTargetText = isFreeMode ? "" : textContent; // No target text for free mode
+
+            if (!isFreeMode && !currentTargetText) {
                 showAlert("没有可练习的文本。请选择或加载练习文本。");
                 return;
             }
-            // Reset practice variables
+
             currentIndex = 0; correctStrokes = 0; totalStrokes = 0; errorStrokes = 0;
             startTime = new Date();
             practiceActive = true;
 
-            // Update UI state
+            // Disable all start buttons, enable reset
             startPracticeBtn.disabled = true;
+            freePracticeBtn.disabled = true;
             resetPracticeBtn.disabled = false;
             customPracticeNameInput.disabled = true;
             addCustomPracticeBtn.disabled = true;
             loadDefaultTextBtn.disabled = true;
+            loadSc2TextBtn.disabled = true;
 
-            renderInitialTargetText(); // Display the text to be typed
-            updateStats(); // Initial stats display (mostly zeros)
+            renderInitialTargetText(); // Display text or free practice message
+            updateStats(); // Reset stats display
 
-            // Start timer for continuous stat updates
             timerInterval = setInterval(() => { if (practiceActive) updateStats(); }, 1000);
 
-            // Add global event listeners for typing
             document.addEventListener('keydown', handleKeyDown);
             document.addEventListener('keyup', handleKeyUp);
         }
 
         function endPractice() {
             practiceActive = false;
-            clearInterval(timerInterval); // Stop the timer
+            clearInterval(timerInterval);
             timerInterval = null;
-            updateStats(); // Final update of stats
+            updateStats(); // Final update
 
             // Re-enable controls
             startPracticeBtn.disabled = false;
-            resetPracticeBtn.disabled = true;
+            freePracticeBtn.disabled = false;
+            resetPracticeBtn.disabled = true; // Reset is disabled when no practice is active
             customPracticeNameInput.disabled = false;
             addCustomPracticeBtn.disabled = false;
             loadDefaultTextBtn.disabled = false;
+            loadSc2TextBtn.disabled = false;
 
-            // Remove global event listeners
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('keyup', handleKeyUp);
 
             // Display completion message
-            targetTextDisplayElement.innerHTML = `练习完成! 得分: ${scoreElement.textContent.split(':')[1].trim()}`;
+            if (isFreePracticeMode) {
+                targetTextDisplayElement.innerHTML = `自由练习结束! APM: ${apmElement.textContent.split(':')[1].trim()}`;
+            } else {
+                targetTextDisplayElement.innerHTML = `练习完成! 得分: ${scoreElement.textContent.split(':')[1].trim()}`;
+            }
 
-            // Reset modifier key states (CapsLock state persists as it's a toggle)
+            // Reset state flags
+            isFreePracticeMode = false;
             isShiftPressed = false; isCtrlPressed = false; isAltPressed = false;
         }
 
         function resetPractice() {
-            if (practiceActive) endPractice(); // Ensure current session is properly ended
-            currentTargetText = ""; // Clear current text
-            targetTextDisplayElement.innerHTML = '按 "开始练习" 按钮或选择/加载练习文本'; // Reset display message
-            // Reset all stats to initial values
+            if (practiceActive) endPractice(); // Ensure current session is properly ended first
+
+            isFreePracticeMode = false; // Ensure free practice mode is off
+            currentTargetText = "";
+            targetTextDisplayElement.innerHTML = '按 "开始练习" 或 "自由练习" 按钮开始';
+
+            // Reset all stats display
             wpmElement.textContent = "WPM: 0";
             accuracyElement.textContent = "准确率: 0%";
             scoreElement.textContent = "得分: 0";
             timerElement.textContent = "时间: 0s";
             apmElement.textContent = "APM: 0";
 
-            // Clear any lingering visual feedback from virtual keys (except active CapsLock)
+            // Clear lingering key highlights
             document.querySelectorAll('.key.active, .key.correct, .key.incorrect').forEach(k => {
-                if (k.dataset.key !== 'CapsLock' || !isCapsLocked) { // Don't remove active from CapsLock if it's on
+                if (k.dataset.key !== 'CapsLock' || !isCapsLocked) {
                     k.classList.remove('active', 'correct', 'incorrect');
                 }
             });
+
+            // Ensure buttons are in correct initial state
+            startPracticeBtn.disabled = false;
+            freePracticeBtn.disabled = false;
+            resetPracticeBtn.disabled = true;
+            customPracticeNameInput.disabled = false;
+            addCustomPracticeBtn.disabled = false;
+            loadDefaultTextBtn.disabled = false;
+            loadSc2TextBtn.disabled = false;
         }
 
-        // --- Custom Practice Text Handling ---
+        // --- Custom Practice Text Handling (remains the same) ---
         function addCustomPracticeText() {
-            const textNameFromInput = customPracticeNameInput.value.trim(); // Can be a name or pasted text
+            const textNameFromInput = customPracticeNameInput.value.trim();
 
-            if (customFilePracticeInput.files.length > 0) { // Prioritize file input
+            if (customFilePracticeInput.files.length > 0) {
                 const file = customFilePracticeInput.files[0];
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     const fileContent = e.target.result;
                     if (fileContent) {
-                        const nameToUse = textNameFromInput || file.name; // Use input name or filename
+                        const nameToUse = textNameFromInput || file.name;
                         userUploadedTexts.push({ name: nameToUse, content: fileContent });
                         showAlert(`"${nameToUse}" 已添加并准备开始练习。`);
-                        startPractice(fileContent); // Start practice with the new file content
-                        customPracticeNameInput.value = ''; // Clear name input
-                        customFilePracticeInput.value = ''; // Important to clear file input for next selection
+                        startPracticeInternal(false, fileContent); // Start guided practice
+                        customPracticeNameInput.value = '';
+                        customFilePracticeInput.value = '';
                     } else {
                         showAlert("文件内容为空或无法读取。");
                     }
@@ -1019,34 +1083,30 @@
                 reader.onerror = function () {
                     showAlert("读取文件失败。");
                 };
-                reader.readAsText(file); // Read the file as plain text
-            } else if (textNameFromInput) { // If no file, use the text from input field as content
-                // Assuming the input field is for the content itself if no file is chosen
+                reader.readAsText(file);
+            } else if (textNameFromInput) {
                 userUploadedTexts.push({ name: "自定义粘贴文本 " + (userUploadedTexts.length + 1), content: textNameFromInput });
                 showAlert(`自定义粘贴文本已添加并准备开始练习。`);
-                startPractice(textNameFromInput); // Start practice with pasted text
-                customPracticeNameInput.value = ''; // Clear input field
+                startPracticeInternal(false, textNameFromInput); // Start guided practice
+                customPracticeNameInput.value = '';
             } else {
                 showAlert("请输入练习文本或选择一个文件。");
             }
         }
 
-        // Event listener for the "Add Local Practice File" button
         addCustomPracticeBtn.addEventListener('click', () => {
-            customFilePracticeInput.click(); // Trigger the hidden file input
+            customFilePracticeInput.click();
         });
 
-        // Event listener for when a file is selected via the hidden file input
         customFilePracticeInput.addEventListener('change', addCustomPracticeText);
 
-        // Allow Enter key in the text input to add pasted text (if no file is selected)
         customPracticeNameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !customFilePracticeInput.files.length) {
                 addCustomPracticeText();
             }
         });
 
-        // --- Theme Toggling ---
+        // --- Theme Toggling (remains the same) ---
         function updateThemeIcon(isDarkMode) {
             themeIconSun.style.display = isDarkMode ? 'block' : 'none';
             themeIconMoon.style.display = isDarkMode ? 'none' : 'block';
@@ -1056,45 +1116,58 @@
         themeToggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light'); // Save theme preference
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
             updateThemeIcon(isDarkMode);
         });
 
         // --- Document Ready / Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            initKeyboard(); // Build the virtual keyboard
-            resetPracticeBtn.disabled = true; // Reset button disabled initially
+            initKeyboard();
 
-            // Load and apply saved theme, or default to dark
             const savedTheme = localStorage.getItem('theme');
-            let initialThemeIsDark = true; // Default to dark theme
+            let initialThemeIsDark = true;
             if (savedTheme) {
                 initialThemeIsDark = savedTheme === 'dark';
             } else {
-                localStorage.setItem('theme', 'dark'); // Save default if not set
+                localStorage.setItem('theme', 'dark');
             }
 
             if (initialThemeIsDark) {
                 document.body.classList.add('dark-mode');
             }
-            updateThemeIcon(initialThemeIsDark); // Set the correct theme icon
+            updateThemeIcon(initialThemeIsDark);
 
-            resetPractice(); // Set initial UI state for practice area
+            resetPractice(); // Set initial state, including disabling reset button
 
-            // Event listener for "Start Practice" button
+            // Event listener for "Start Practice" button (loads random general text)
             startPracticeBtn.addEventListener('click', () => {
-                // If starting without specific text, load a random default one
-                const randomDefaultText = defaultPracticeTexts[Math.floor(Math.random() * defaultPracticeTexts.length)];
-                startPractice(randomDefaultText.content);
+                const randomGeneralText = generalPracticeTexts[Math.floor(Math.random() * generalPracticeTexts.length)];
+                startPracticeInternal(false, randomGeneralText.content); // Guided practice
+            });
+            // Event listener for "Free Practice" button
+            freePracticeBtn.addEventListener('click', () => {
+                startPracticeInternal(true); // Free practice
             });
             // Event listener for "Reset Practice" button
             resetPracticeBtn.addEventListener('click', resetPractice);
 
-            // Event listener for "Load Default Practice Text" button
+            // Event listener for "Load Default Practice Text" button (loads random general text)
             loadDefaultTextBtn.addEventListener('click', () => {
-                if (!practiceActive) { // Only if not already practicing
-                    const randomDefaultText = defaultPracticeTexts[Math.floor(Math.random() * defaultPracticeTexts.length)];
-                    startPractice(randomDefaultText.content);
+                if (!practiceActive) {
+                    const randomGeneralText = generalPracticeTexts[Math.floor(Math.random() * generalPracticeTexts.length)];
+                    startPracticeInternal(false, randomGeneralText.content); // Guided practice
+                }
+            });
+
+            // Event listener for the "Load StarCraft Practice" button
+            loadSc2TextBtn.addEventListener('click', () => {
+                if (!practiceActive) {
+                    if (sc2PracticeTexts.length > 0) {
+                        const randomSc2Text = sc2PracticeTexts[Math.floor(Math.random() * sc2PracticeTexts.length)];
+                        startPracticeInternal(false, randomSc2Text.content); // Guided practice
+                    } else {
+                        showAlert("没有可用的星际争霸练习文本。");
+                    }
                 }
             });
         });
